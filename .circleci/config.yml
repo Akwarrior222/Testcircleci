@@ -13,6 +13,19 @@ jobs:
     steps:
       - checkout
       - run: python tests.py
+  e2e_tests:
+    docker:
+      - image: mcr.microsoft.com/playwright/python:v1.24.0-focal
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            python -m pip install --upgrade pip
+            pip install pytest-playwright
+      - run:
+          name: Run Playwright tests
+          command: pytest path/to/your/e2e/tests
   deploy:
     docker:
       - image: cimg/python:3.11
@@ -25,10 +38,13 @@ workflows:
       - build
       - test:
           requires:
-            - build 
-      - deploy:
+            - build
+      - e2e_tests:
           requires:
             - test
+      - deploy:
+          requires:
+            - e2e_tests
           filters:
             branches:
               only: main
